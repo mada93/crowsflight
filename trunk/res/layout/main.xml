@@ -1,43 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:id="@+id/mainView"
-    
-    >
-    		<EditText
-		android:id="@+id/address"
-		
-		android:textSize="7pt"
-    	android:layout_width="275px"
-	    android:layout_height="40px"
-	    />
-	    
-<Button
-android:id="@+id/searchButton"
-android:layout_width="50px"
-android:layout_height="40px"
-android:layout_x="275px"
+<AbsoluteLayout 
+xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical" 
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent" 
+	android:id="@+id/mainView">
+	
+	<EditText 
+	android:id="@+id/address" 
+	android:textSize="7pt"
+		android:layout_width="280px" 
+		android:layout_height="40px" />
 
-android:text="go"
-
-/>
+	<Button 
+	android:id="@+id/searchButton" 
+	android:layout_width="40px"
+		android:layout_height="40px" 
+		android:layout_x="280px" 
+		android:text="go" />
 
 
-<TextView
-		android:id="@+id/infoView"
-
-	    android:textSize="4pt"
-		android:clickable="true"
+	<TextView 
+	android:id="@+id/infoView" 
+	android:textSize="4pt"
+		android:clickable="true" 
 		android:layout_width="fill_parent"
-		android:layout_height="70px"
-		android:layout_y="380px"
-		android:text="Info" 
-		/>
+		android:layout_height="90px" 
+		android:layout_y="370px" 
+		android:text="Info" />
 		
-
-		
+	<ListView 
+	android:id="@android:id/list" 
+	android:layout_width="fill_parent"
+		android:layout_height="fill_parent" 
+		android:stackFromBottom="true"
+		android:transcriptMode="alwaysScroll" />
 
 
 </AbsoluteLayout>
