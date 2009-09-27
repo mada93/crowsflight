@@ -1,6 +1,12 @@
 package com.example;
 
+import java.io.InputStream;
 import java.util.List;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.app.Activity;
 import android.content.Context;
@@ -67,14 +73,16 @@ public class crowsFlight extends Activity implements LocationListener {
 	double aLat;
 	double aLon;
 	String street="";
+	String locality="";
 	
 	//private FrameLayout compassFrame;
-public float distance=10;
-public float initialDist=10;
+public float distance=0;
+public float initialDist=1;
 boolean initialDistSet=false;
 double bearing=0;
-
+double gpsAccuracy=0;
 	
+
     	/** Called when the activity is first created. */
 	    @Override
 	    public void onCreate(Bundle savedInstanceState) {
@@ -132,14 +140,33 @@ double bearing=0;
 
 	    }
 
-
+	  public static InputStream getInputStreamFromUrl(String url) {  
+	    	     InputStream content = null;  
+	    	     try {  
+	    	       HttpClient httpclient = new DefaultHttpClient();  
+	    	       HttpResponse response = httpclient.execute(new HttpGet(url));  
+	    	       content = response.getEntity().getContent();  
+	    	     } 
+	    	     
+	    	     catch (Exception e) {  
+	    	       Log.e("[GET REQUEST]", "Network exception");  
+	    	     }  
+	    	       return content;  
+	    	   }  
 	    
 	    private OnClickListener buttonListener = new OnClickListener() {
 	        public void onClick(View v) {
 	        	String addressInput = addressText.getText().toString(); // Get input text
 				try {
 					List<Address> foundAdresses = gc.getFromLocationName(addressInput, 5); // Search addresses
+					
 					//searchProvider.saveRecentQuery(addressInput,null);
+					
+					String center=myLat+","+myLon;
+					String url="http://ajax.googleapis.com/ajax/services/search/local?v=1.0&rsz=small&q="+addressInput+"&sll="+center+"";
+					//etInputStreamFromUrl(url);
+					
+					
 					
 					if (foundAdresses==null) { // if no address found,
 						// display an error
@@ -169,7 +196,7 @@ double bearing=0;
 
 
 	    void updateInfo(){
-  	        info.setText("lat: "+myLat+", lon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nbearing: "+bearing+"\ndistance: "+distance+"/"+initialDist);
+  	        info.setText("accuracy: "+gpsAccuracy+"lat: "+myLat+", lon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nbearing: "+bearing+"\ndistance: "+distance+"/"+initialDist);
 
 	    	
 	    }
@@ -181,7 +208,9 @@ double bearing=0;
                 myLat = (float) arg0.getLatitude();
                 myLon = (float) arg0.getLongitude();
                
-                 bearing();
+                gpsAccuracy=arg0.getAccuracy();
+                
+                bearing();
                 updateInfo();
          }
         
@@ -292,19 +321,23 @@ double bearing=0;
 	            
 	            //distance arc
 	            canvas.save();
-	            canvas.rotate(90);
-	            paint.setColor(Color.WHITE);
+	            canvas.rotate(-90);
 	            paint.setStrokeWidth(4);
 	            paint.setStrokeCap(Paint.Cap.SQUARE);	            
 	            paint.setStyle(Paint.Style.STROKE);
 	            distPath.moveTo(distPathRadius,0);
-//	            for(float i=0;i<distance/initialDist*2*Math.PI;i+=.5){
-//	            distPath.lineTo( distPathRadius*(float)Math.cos(i), distPathRadius*(float)Math.sin(i));
-//	            }
-//	            canvas.drawPath(distPath, mPaint);
 	            int radius=100;
 	            RectF rect=new RectF(-radius,-radius,radius,radius);
-	            canvas.drawArc(rect,0,(float) (distance/initialDist*360),false,mPaint);
+
+	            paint.setColor(Color.rgb(20, 20, 20));
+	            canvas.drawArc(rect,0,360,false,mPaint);
+
+	            paint.setColor(Color.WHITE);
+	            float arc=distance/initialDist;
+	            if(arc>1)arc=1;
+	            
+	            canvas.drawArc(rect,0,(float)(arc*355.0),false,mPaint);
+
 	            
 	            canvas.restore();
 	            
@@ -371,6 +404,7 @@ double bearing=0;
 
  	        public void onAccuracyChanged(int sensor, int accuracy) {
  	            // TODO Auto-generated method stub
+ 	        	accuracy=accuracy;
  	        }
  	    };
  	    
@@ -399,6 +433,8 @@ super.onStop();
  	    }
  	    
 
+ 	    
+ 	    
        
 
  }
