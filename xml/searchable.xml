@@ -1,0 +1,4 @@
+<searchable xmlns:android="http://schemas.android.com/apk/res/android"
+     android:searchSuggestAuthority="your.suggestion.authority"
+     android:searchSuggestSelection=" ? "
+</searchable>
