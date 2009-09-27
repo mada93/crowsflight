@@ -81,6 +81,7 @@ public float initialDist=1;
 boolean initialDistSet=false;
 double bearing=0;
 double gpsAccuracy=0;
+float heading=0;
 	
 
     	/** Called when the activity is first created. */
@@ -196,7 +197,7 @@ double gpsAccuracy=0;
 
 
 	    void updateInfo(){
-  	        info.setText("accuracy: "+gpsAccuracy+"lat: "+myLat+", lon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nbearing: "+bearing+"\ndistance: "+distance+"/"+initialDist);
+  	        info.setText("accuracy: "+gpsAccuracy+"\nlat: "+myLat+", lon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nheading: "+heading+"\nbearing: "+bearing+"\ndistance: "+distance+"/"+initialDist);
 
 	    	
 	    }
@@ -296,7 +297,7 @@ double gpsAccuracy=0;
 	            //northarrow
 	            canvas.save();
 	            if (mValues != null) {            
-	                canvas.rotate(-mValues[0]);
+	                canvas.rotate(-heading);
 	            }
 	            paint.setColor(Color.argb(255, 150, 0, 0));
 	            paint.setStyle(Paint.Style.FILL);
@@ -311,13 +312,24 @@ double gpsAccuracy=0;
 	            //pointer
 	            canvas.save();
 	            if (mValues != null) {            
-	                canvas.rotate((float) (-mValues[0]+bearing));
+	                canvas.rotate((float) (-heading+bearing));
 	            }
 
 	            //arrow
 	            paint.setColor(Color.WHITE);
 	            paint.setStyle(Paint.Style.FILL);
 	            canvas.drawPath(mPath, mPaint);
+	            
+	            paint.setColor(Color.BLACK);
+	            paint.setStyle(Paint.Style.FILL);
+	            float ac=(float) (gpsAccuracy/50);
+	            if(ac>1)ac=1;
+	            canvas.save();
+
+	            canvas.translate(0, (float) (-50+(ac*40)));
+	            canvas.drawPath(mPath, mPaint);
+	            canvas.restore();
+
 	            
 	            //distance arc
 	            canvas.save();
@@ -397,6 +409,10 @@ double gpsAccuracy=0;
  	        public void onSensorChanged(int sensor, float[] values) {
  	            if (Config.LOGD) Log.d(TAG, "sensorChanged (" + values[0] + ", " + values[1] + ", " + values[2] + ")");
  	            mValues = values;
+ 	            heading=mValues[0];
+ 	            
+                updateInfo();
+
  	            if (mView != null) {
  	                mView.invalidate();
  	            }
@@ -404,7 +420,6 @@ double gpsAccuracy=0;
 
  	        public void onAccuracyChanged(int sensor, int accuracy) {
  	            // TODO Auto-generated method stub
- 	        	accuracy=accuracy;
  	        }
  	    };
  	    
@@ -419,6 +434,9 @@ double gpsAccuracy=0;
  	        mSensorManager.registerListener(mListener, 
  	        		SensorManager.SENSOR_ORIENTATION,
  	        		SensorManager.SENSOR_DELAY_GAME);
+ 	        
+	        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1l,1l, this);
+
  	    }
 
 

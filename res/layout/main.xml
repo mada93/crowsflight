@@ -8,15 +8,16 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	
 	<EditText 
 	android:id="@+id/address" 
-	android:textSize="7pt"
-		android:layout_width="280px" 
-		android:layout_height="40px" />
+	android:textSize="9pt"
+		android:layout_width="260px" 
+		android:layout_height="60px" 
+		/>
 
 	<Button 
 	android:id="@+id/searchButton" 
-	android:layout_width="40px"
-		android:layout_height="40px" 
-		android:layout_x="280px" 
+	android:layout_width="60px"
+		android:layout_height="60px" 
+		android:layout_x="260px" 
 		android:text="go" />
 
 
@@ -25,16 +26,10 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:textSize="4pt"
 		android:clickable="true" 
 		android:layout_width="fill_parent"
-		android:layout_height="90px" 
-		android:layout_y="370px" 
+		android:layout_height="100px" 
+		android:layout_y="360px" 
 		android:text="Info" />
 		
-	<ListView 
-	android:id="@android:id/list" 
-	android:layout_width="fill_parent"
-		android:layout_height="fill_parent" 
-		android:stackFromBottom="true"
-		android:transcriptMode="alwaysScroll" />
 
 
 </AbsoluteLayout>
