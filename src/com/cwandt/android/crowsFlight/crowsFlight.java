@@ -23,8 +23,12 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Config;
 import android.util.Log;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AbsoluteLayout;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,6 +40,7 @@ import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.view.ContextMenu;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,6 +52,7 @@ import android.view.View.OnClickListener;
 import android.location.Address;
 import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 
 
 public class crowsFlight extends ListActivity implements LocationListener {
@@ -96,7 +102,12 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	private static final int ACTIVITY_CREATE=0;
 	private static final int INSERT_ID = Menu.FIRST;
 	private static final int DELETE_ID = Menu.FIRST + 1;
+	private static final int DONATE_ID = Menu.FIRST + 2;
 
+
+	ProgressDialog myProgressDialog;
+	
+	
     	/** Called when the activity is first created. */
 	    @Override
 	    public void onCreate(Bundle savedInstanceState) {
@@ -115,7 +126,8 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	        addressText=(EditText) findViewById(R.id.address);
 	        //listCover=(ListView)findViewById(R.id.listCover);
 	        //listCover.setVisibility(listCover.VISIBLE);
-	       
+	 
+
 	        searchBttn.setOnClickListener(buttonListener);
 	        addressText.setOnClickListener(textBoxListener);
 
@@ -145,7 +157,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    }
 	    
 	    //list
-	    private void fillData() {
+	    void fillData() {
 	        // Get all of the rows from the database and create the item list
 	        mNotesCursor = mDbHelper.fetchAllNotes();
 	        startManagingCursor(mNotesCursor);
@@ -165,6 +177,8 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    public boolean onCreateOptionsMenu(Menu menu) {
 	        super.onCreateOptionsMenu(menu);
 	        menu.add(0, INSERT_ID,0, "Save Current Location");
+	        menu.add(0, DONATE_ID,0, "Donate");
+
 	        return true;
 	    }
 	    
@@ -174,10 +188,32 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	        case INSERT_ID:
 	            markHere();
 	            return true;
+	            
+	            
+	        case DONATE_ID:
+	        	
+//	        	mView.setVisibility(mView.INVISIBLE);
+//	        	
+//	        	WebView webview;
+//	            webview = (WebView) findViewById(R.id.webview);
+//		        webview.getSettings().setJavaScriptEnabled(true);
+//
+//	            //https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8675557
+//		        webview.loadUrl("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8675557");
+//		        webview.setVisibility(webview.VISIBLE);
+	        	
+		        donate();
+		        
+		        return true;
+  	
 		    }        
 	        return super.onMenuItemSelected(featureId, item);
 	    }
 
+	    
+	
+	    
+	    
 	    @Override
 		public void onCreateContextMenu(ContextMenu menu, View v,
 				ContextMenuInfo menuInfo) {
@@ -213,6 +249,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 //	        startActivityForResult(i, ACTIVITY_EDIT);
 	        
 	        street=c.getString( c.getColumnIndexOrThrow(NotesDbAdapter.KEY_TITLE));
+	        locality="";
 	        //search(searchString,false);
 	        
 	        aLatString=c.getString( c.getColumnIndexOrThrow(NotesDbAdapter.KEY_LAT));
@@ -222,11 +259,10 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	        aLon=Float.valueOf(aLonString).floatValue();
 			
 	        initialDistSet=false;
-            
+	        
 			bearing();
             updateInfo();
-            	           
-         
+ 
 	    }
 
 
@@ -257,6 +293,39 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    
 	  
 	  
+	  void donate(){
+		  final FrameLayout fl = new FrameLayout(this);
+		  final EditText input = new EditText(this);
+		  input.setGravity(Gravity.CENTER);
+
+		  fl.addView(input, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+		 		  
+		  input.setText("1.99");
+		  new AlertDialog.Builder(this)
+		       .setView(fl)
+		       .setTitle("Enter how much you would like to donate.")
+		       .setPositiveButton("OK", new DialogInterface.OnClickListener(){
+		            public void onClick(DialogInterface d, int which) {
+		                 d.dismiss();
+		                 //Toast.makeText(context, text, duration)
+		                 //Toast.makeText(OuterActivity.this, "Value: " + input.getText().toString(), Toast.LENGTH_LONG).show();
+		                 //mDbHelper.createNote(input.getText().toString(), myLatString, myLonString); 
+		                 //fillData();
+//		 	            //https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8675557
+
+		            }
+		       })
+		       .setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+		            public void onClick(DialogInterface d, int which) {
+		                 d.dismiss();
+		            }
+		       }).create().show();
+	  }	  
+	  
+	  
+	  
+	  
 	  
 	  void markHere(){
 		  final FrameLayout fl = new FrameLayout(this);
@@ -266,15 +335,13 @@ public class crowsFlight extends ListActivity implements LocationListener {
 		  fl.addView(input, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
 		 		  
-		  input.setText("Here");
+		  input.setText("");
 		  new AlertDialog.Builder(this)
 		       .setView(fl)
 		       .setTitle("Enter a name for your current location.")
 		       .setPositiveButton("OK", new DialogInterface.OnClickListener(){
 		            public void onClick(DialogInterface d, int which) {
 		                 d.dismiss();
-		                 //Toast.makeText(context, text, duration)
-		                 //Toast.makeText(OuterActivity.this, "Value: " + input.getText().toString(), Toast.LENGTH_LONG).show();
 		                 mDbHelper.createNote(input.getText().toString(), myLatString, myLonString); 
 		                 fillData();
 		                 }
@@ -284,9 +351,6 @@ public class crowsFlight extends ListActivity implements LocationListener {
 		                 d.dismiss();
 		            }
 		       }).create().show();
-		  
-
-  
 	  }
 	  
 	  
@@ -295,10 +359,11 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	  
 	  
 	  
-	  void search(String searchInput, boolean save){
+	  void search(String searchInput){
 
+		  
 			try {
-				List<Address> foundAdresses = gc.getFromLocationName(searchInput, 5); // Search addresses
+				List<Address> foundAdresses = gc.getFromLocationName(searchInput, 1); // Search addresses
 						
 				
 //				String center=myLat+","+myLon;
@@ -314,7 +379,9 @@ public class crowsFlight extends ListActivity implements LocationListener {
 						//dropdown list of found addresses
 						Address x = foundAdresses.get(i);
 						street=x.getAddressLine(0);
+						
 						locality=x.getLocality();
+						
 		                if(locality==null)locality="";
 
 						aLat = (float)x.getLatitude();
@@ -329,38 +396,62 @@ public class crowsFlight extends ListActivity implements LocationListener {
 					bearing();
 	                updateInfo();
 	                	                	
-	                if(save==true){
 	                mDbHelper.createNote(searchInput, aLatString, aLonString); 
 	                fillData();
-	            	}
-	                
-
 				}
 			} catch (Exception e) {
 				// @todo: Show error message
 				//getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
 			}
-      
+
 		  
 	  }
+	  
+	  
+	  
 	    private OnClickListener buttonListener = new OnClickListener() {
 	        public void onClick(View v) {
 	        	
-	          	String addressInput = addressText.getText().toString(); // Get input text
-	          	search(addressInput,true);
-	  
-	        	
-	        	
+	        
+	                /* Show a progress-bar */
+	               myProgressDialog = ProgressDialog.show(crowsFlight.this,"Please wait...", "Searching for coordinates...", true);
+	               new Thread() {
+	                     public void run() {
+	                          
+	                          try {
+	              	          	String addressInput = addressText.getText().toString(); // Get input text
+	            	          	search(addressInput);	            	            
+	                               
+	                          } catch (NumberFormatException nfe) {
+	                               // Crap was typed Wink
+	                          } catch (Exception e) {
+	                               Log.e("Search", e.toString(), e);
+	                          }
+	                          handler.sendEmptyMessage(0);
+	                          //myProgressDialog.dismiss();
+	                     }
+	                }.start();
+	                
+	                
+	        	//close keyboard here
+
 	        }
 	    };
 
+	    
+	  
+	    private Handler handler = new Handler() {
+	    	public void handleMessage(Message msg) {
+	    		myProgressDialog.dismiss();
+	    		fillData();
+	    	}
+	    };
+	      
 	    private OnClickListener textBoxListener = new OnClickListener() {
 	        public void onClick(View v) {
 	        	
 				//listCover.setVisibility(listCover.INVISIBLE);
 
-	        	
-	        	
 	        }
 	    };
 	    
@@ -371,9 +462,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    
 
 	    void updateInfo(){
-  	        info.setText("accuracy: "+gpsAccuracy+"\nlat: "+myLat+", lon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nheading: "+heading+"\nbearing: "+bearing+"\ndistance: "+distance+"/"+initialDist);
-
-	    	
+  	        info.setText("accuracy: "+gpsAccuracy+"meters \nmylat: "+myLat+", myLon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nheading: "+heading+"\nbearing: "+bearing+"\ndistance: "+distance+" / "+initialDist);	
 	    }
 	    
         public void onLocationChanged(Location arg0) {
