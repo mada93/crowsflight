@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package com.example;
+package com.cwandt.android.crowsFlight;
+
 
 import android.app.Activity;
 import android.content.Intent;
@@ -27,7 +28,9 @@ import android.widget.EditText;
 public class NoteEdit extends Activity {
 	NotesDbAdapter mDbHelper;
 	private EditText mTitleText;
-    private EditText mBodyText;
+    private EditText mLatText;
+    private EditText mLonText;
+
     public Long mRowId;
 
     @Override
@@ -39,8 +42,9 @@ public class NoteEdit extends Activity {
     setContentView(R.layout.note_edit);
      
     mTitleText = (EditText) findViewById(R.id.title);
-    mBodyText = (EditText) findViewById(R.id.body);
-     
+    mLatText = (EditText) findViewById(R.id.lat);
+    mLonText = (EditText) findViewById(R.id.lon);
+
     Button confirmButton = (Button) findViewById(R.id.confirm);
      
     mRowId = savedInstanceState != null ? savedInstanceState.getLong(NotesDbAdapter.KEY_ROWID) 
@@ -69,8 +73,10 @@ public class NoteEdit extends Activity {
             startManagingCursor(note);
             mTitleText.setText(note.getString(
     	            note.getColumnIndexOrThrow(NotesDbAdapter.KEY_TITLE)));
-            mBodyText.setText(note.getString(
-                    note.getColumnIndexOrThrow(NotesDbAdapter.KEY_BODY)));
+            mLatText.setText(note.getString(
+                    note.getColumnIndexOrThrow(NotesDbAdapter.KEY_LAT)));
+            mLonText.setText(note.getString(
+                    note.getColumnIndexOrThrow(NotesDbAdapter.KEY_LON)));
         }
     }
     
@@ -94,15 +100,16 @@ public class NoteEdit extends Activity {
     
     private void saveState() {
         String title = mTitleText.getText().toString();
-        String body = mBodyText.getText().toString();
+        String lat = mLatText.getText().toString();
+        String lon = mLonText.getText().toString();
 
         if (mRowId == null) {
-            long id = mDbHelper.createNote(title, body);
+            long id = mDbHelper.createNote(title, lat, lon);
             if (id > 0) {
                 mRowId = id;
             }
         } else {
-            mDbHelper.updateNote(mRowId, title, body);
+            mDbHelper.updateNote(mRowId, title, lat, lon);
         }
     }
     

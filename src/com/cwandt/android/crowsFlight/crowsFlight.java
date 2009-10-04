@@ -1,9 +1,10 @@
-package com.example;
+package com.cwandt.android.crowsFlight;
 
-import java.io.FileNotFoundException;
+
+
+
 import java.io.InputStream;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -11,14 +12,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.hardware.SensorListener;
 import android.hardware.SensorManager;
-import android.inputmethodservice.InputMethodService;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
@@ -27,7 +25,6 @@ import android.os.Bundle;
 import android.util.Config;
 import android.util.Log;
 import android.widget.AbsoluteLayout;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -35,7 +32,6 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.view.ContextMenu;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,13 +39,9 @@ import android.view.ViewGroup;
 import android.graphics.*;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
-import android.view.View.OnKeyListener;
-import android.view.inputmethod.InputBinding;
+
 import android.location.Address;
 import android.app.ListActivity;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.os.Bundle;
 
 
 public class crowsFlight extends ListActivity implements LocationListener {
@@ -66,7 +58,6 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	//compass sensor
 	private static final String TAG = "Compass";
 
-	private static final int SEARCH = 0;
 	private SensorManager mSensorManager;
 	private CompassView mView;
 	private float[] mValues;
@@ -87,7 +78,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	public float initialDist=1;
 	boolean initialDistSet=false;
 	double bearing=0;
-	double gpsAccuracy=0;
+	double gpsAccuracy=150;
 	float heading=0;
 		
 
@@ -98,8 +89,6 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	public int mNoteNumber=0;
 	
 	private static final int ACTIVITY_CREATE=0;
-	private static final int ACTIVITY_EDIT=1;
-	
 	private static final int INSERT_ID = Menu.FIRST;
 	private static final int DELETE_ID = Menu.FIRST + 1;
 
@@ -157,10 +146,10 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	        startManagingCursor(mNotesCursor);
 	        
 	        // Create an array to specify the fields we want to display in the list (only TITLE)
-	        String[] from = new String[]{NotesDbAdapter.KEY_TITLE};
+	        String[] from = new String[]{NotesDbAdapter.KEY_TITLE,NotesDbAdapter.KEY_LAT,NotesDbAdapter.KEY_LON};
 	        
 	        // and an array of the fields we want to bind those fields to (in this case just text1)
-	        int[] to = new int[]{R.id.text1};
+	        int[] to = new int[]{R.id.text1,R.id.textlat,R.id.textlon};
 	        
 	        // Now create a simple cursor adapter and set it to display
 	        SimpleCursorAdapter notes = new SimpleCursorAdapter(this, R.layout.notes_row, mNotesCursor, from, to);
@@ -170,7 +159,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    @Override
 	    public boolean onCreateOptionsMenu(Menu menu) {
 	        super.onCreateOptionsMenu(menu);
-	        //menu.add(0, INSERT_ID,0, "Insert");
+	        menu.add(0, INSERT_ID,0, "Mark Here");
 	        return true;
 	    }
 	    
@@ -178,7 +167,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    public boolean onMenuItemSelected(int featureId, MenuItem item) {
 	        switch(item.getItemId()) {
 	        case INSERT_ID:
-	            createNote();
+	            markHere();
 	            return true;
 		    }        
 	        return super.onMenuItemSelected(featureId, item);
@@ -218,9 +207,21 @@ public class crowsFlight extends ListActivity implements LocationListener {
 //	        i.putExtra(NotesDbAdapter.KEY_ROWID, id);
 //	        startActivityForResult(i, ACTIVITY_EDIT);
 	        
-	        String searchString=c.getString( c.getColumnIndexOrThrow(NotesDbAdapter.KEY_TITLE));
-	        search(searchString,false);
-	                
+	        street=c.getString( c.getColumnIndexOrThrow(NotesDbAdapter.KEY_TITLE));
+	        //search(searchString,false);
+	        
+	        aLatString=c.getString( c.getColumnIndexOrThrow(NotesDbAdapter.KEY_LAT));
+	        aLonString=c.getString( c.getColumnIndexOrThrow(NotesDbAdapter.KEY_LON));
+ 
+	        aLat=Float.valueOf(aLatString).floatValue();
+	        aLon=Float.valueOf(aLonString).floatValue();
+			
+	        initialDistSet=false;
+            
+			bearing();
+            updateInfo();
+            	           
+         
 	    }
 
 
@@ -250,15 +251,32 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    	   }  
 	    
 	  
+	  
+	  
+	  void markHere(){
+          mDbHelper.createNote("here", aLatString, aLonString); 
+          fillData();
+  
+	  }
+	  
+	  
+	  
+
+	  
+	  
+	  
 	  void search(String searchInput, boolean save){
 
 			try {
 				List<Address> foundAdresses = gc.getFromLocationName(searchInput, 5); // Search addresses
-								
-				//String center=myLat+","+myLon;
-				//String url="http://ajax.googleapis.com/ajax/services/search/local?v=1.0&rsz=small&q="+searchInput+"&sll="+center+"";
-				//etInputStreamFromUrl(url);
-								
+						
+				
+//				String center=myLat+","+myLon;
+//				String url="http://ajax.googleapis.com/ajax/services/search/local?v=1.0&rsz=small&q="+searchInput+"&sll="+center+"";
+//				InputStream source=getInputStreamFromUrl(url);
+
+				
+
 				if (foundAdresses==null) { // if no address found,
 					// display an error
 				} else { // else display address on map
@@ -271,7 +289,10 @@ public class crowsFlight extends ListActivity implements LocationListener {
 
 						aLat = (float)x.getLatitude();
 						aLon = (float)x.getLongitude();		
-				        
+						
+						aLatString=Float.toString((float) aLat);
+						aLonString=Float.toString((float) aLon);
+
 					}
 					initialDistSet=false;
 	                
@@ -279,7 +300,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	                updateInfo();
 	                	                	
 	                if(save==true){
-	                mDbHelper.createNote(searchInput, ""); 
+	                mDbHelper.createNote(searchInput, aLatString, aLonString); 
 	                fillData();
 	            	}
 	                
@@ -531,10 +552,10 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	            paint.setTypeface(type);
 	            canvas.drawText(distanceString,textX,15,mPaint);
 	           
-	            paint.setTextSize(20);
+	            paint.setTextSize(15);
 	            canvas.drawText(street,textX,35,mPaint);
 	            
-	            paint.setTextSize(15);
+	            paint.setTextSize(10);
 	            canvas.drawText(locality,textX,45,mPaint);
 
 	            //if (lat!=null) canvas.drawText("lat: "+lat,textX,10,mPaint);

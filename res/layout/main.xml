@@ -5,55 +5,52 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="fill_parent"
 	android:layout_height="fill_parent" 
 	android:id="@+id/mainView"
-		android:background="#000000"
-	
+	android:background="#000000"
 	>
 	
 	<EditText 
 	android:id="@+id/address" 
 	android:textSize="8pt"
-		android:layout_width="260px" 
-		android:layout_height="50px" 
-				android:layout_y="3px" 
-				android:layout_x="3px" 
-		
-		/>
+	android:layout_width="260px" 
+	android:layout_height="50px" 
+	android:layout_y="3px" 
+	android:layout_x="3px" 
+	/>
 
 	<Button 
 	android:id="@+id/searchButton" 
 	android:layout_width="50px"
-		android:layout_height="50px" 
-		android:layout_x="263px" 
-		android:layout_y="3px" 
-		
-		android:text="go" />
+	android:layout_height="50px" 
+	android:layout_x="263px" 
+	android:layout_y="3px" 
+	android:text="go" 
+	/>
 
 
 	<TextView 
 	android:id="@+id/infoView" 
 	android:textSize="4pt"
-		android:clickable="true" 
-		android:layout_width="fill_parent"
-		android:layout_height="100px" 
-		android:layout_y="360px" 
-		android:text="Info" />
+	android:clickable="true" 
+	android:layout_width="fill_parent"
+	android:layout_height="100px" 
+	android:layout_y="360px" 
+	android:text="Info" 
+	/>
 		
-   <ListView android:id="@+id/android:list"
-               android:layout_width="fill_parent" 
-               android:layout_height="300px"
-               android:background="#000000"
-               android:layout_y="60px" 
-               android:layout_weight="1"
-               android:drawSelectorOnTop="false"
+    <ListView android:id="@+id/android:list"
+    android:layout_width="fill_parent" 
+    android:layout_height="305px"
+    android:background="#000000"
+    android:layout_y="55px" 
+    android:layout_weight="1"
+    android:drawSelectorOnTop="false"
   	/>
   	
-  	
-  	
   	<TextView android:id="@+id/android:empty"
-          android:layout_width="wrap_content"
-        	android:layout_height="wrap_content"
-        	android:text="No Notes!"/>
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text=""
+    />
         	
-
 </AbsoluteLayout>
 
