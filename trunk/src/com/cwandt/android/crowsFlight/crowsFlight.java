@@ -25,6 +25,8 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Spannable;
+import android.text.util.Linkify;
 import android.util.Config;
 import android.util.Log;
 import android.webkit.WebView;
@@ -106,7 +108,6 @@ public class crowsFlight extends ListActivity implements LocationListener {
 
 
 	ProgressDialog myProgressDialog;
-	
 	
     	/** Called when the activity is first created. */
 	    @Override
@@ -295,28 +296,38 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	  
 	  void donate(){
 		  final FrameLayout fl = new FrameLayout(this);
-		  final EditText input = new EditText(this);
-		  input.setGravity(Gravity.CENTER);
 
-		  fl.addView(input, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+		  final	WebView webview  = new WebView(this);
+		  webview.getSettings().setJavaScriptEnabled(true);
+		  
+		  
 
-		 		  
-		  input.setText("1.99");
+          /* Show a progress-bar */
+         myProgressDialog = ProgressDialog.show(crowsFlight.this,"Please wait...", "Loading page...", true);
+         new Thread() {
+               public void run() {
+                    
+                    try {
+              		  webview.loadUrl("http://cwandt.com/donations/index.html");
+            	            
+                         
+                    } catch (NumberFormatException nfe) {
+                         // Crap was typed Wink
+                    } catch (Exception e) {
+                         Log.e("Search", e.toString(), e);
+                    }
+                    myProgressDialog.dismiss();
+               }
+          }.start();
+          
+		  
+		  fl.addView(webview, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
 		  new AlertDialog.Builder(this)
 		       .setView(fl)
-		       .setTitle("Enter how much you would like to donate.")
-		       .setPositiveButton("OK", new DialogInterface.OnClickListener(){
-		            public void onClick(DialogInterface d, int which) {
-		                 d.dismiss();
-		                 //Toast.makeText(context, text, duration)
-		                 //Toast.makeText(OuterActivity.this, "Value: " + input.getText().toString(), Toast.LENGTH_LONG).show();
-		                 //mDbHelper.createNote(input.getText().toString(), myLatString, myLonString); 
-		                 //fillData();
-//		 	            //https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8675557
-
-		            }
-		       })
-		       .setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+		       .setTitle("Donations are welcome.")
+		       
+		       .setNegativeButton("Done", new DialogInterface.OnClickListener(){
 		            public void onClick(DialogInterface d, int which) {
 		                 d.dismiss();
 		            }
@@ -547,7 +558,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	            int w = canvas.getWidth();
 	            int h = canvas.getHeight();
 	            int cx = w / 2;
-	            int cy = h / 2;
+	            int cy = 200;
 
 	            canvas.translate(cx, cy);
 

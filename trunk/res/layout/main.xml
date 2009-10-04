@@ -53,12 +53,6 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     android:text=""
     />
     
-    <WebView 
-        android:id="@+id/webview"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:visibility="invisible"
-    />
      	
 </AbsoluteLayout>
 
