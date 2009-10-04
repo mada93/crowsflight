@@ -35,6 +35,7 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_height="100px" 
 	android:layout_y="360px" 
 	android:text="Info" 
+	android:padding="3px"
 	/>
 		
     <ListView android:id="@+id/android:list"
@@ -51,6 +52,13 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
     android:text=""
     />
-        	
+    
+    <WebView 
+        android:id="@+id/webview"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="invisible"
+    />
+     	
 </AbsoluteLayout>
 
