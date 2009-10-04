@@ -34,7 +34,7 @@ import android.util.Log;
  * of using a collection of inner classes (which is less scalable and not
  * recommended).
  */
-public class dbAdapter {
+public class NotesDbAdapter {
 
     public static final String KEY_TITLE = "title";
     public static final String KEY_BODY = "body";
@@ -84,7 +84,7 @@ public class dbAdapter {
      * 
      * @param ctx the Context within which to work
      */
-    public dbAdapter(Context ctx) {
+    public NotesDbAdapter(Context ctx) {
         this.mCtx = ctx;
     }
 
@@ -97,7 +97,7 @@ public class dbAdapter {
      *         initialization call)
      * @throws SQLException if the database could be neither opened or created
      */
-    public dbAdapter open() throws SQLException {
+    public NotesDbAdapter open() throws SQLException {
         mDbHelper = new DatabaseHelper(mCtx);
         mDb = mDbHelper.getWritableDatabase();
         return this;
@@ -125,6 +125,8 @@ public class dbAdapter {
         return mDb.insert(DATABASE_TABLE, null, initialValues);
     }
 
+    
+    
     /**
      * Delete the note with the given rowId
      * 
@@ -144,7 +146,7 @@ public class dbAdapter {
     public Cursor fetchAllNotes() {
 
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE,
-                KEY_BODY}, null, null, null, null, null);
+                KEY_BODY}, null, null, null, null, KEY_ROWID+" DESC");
     }
 
     /**

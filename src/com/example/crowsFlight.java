@@ -2,6 +2,7 @@ package com.example;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +13,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.SensorListener;
@@ -27,14 +29,20 @@ import android.widget.AbsoluteLayout;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.view.ContextMenu;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.graphics.*;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
 import android.location.Address;
 import android.app.ListActivity;
 import android.database.Cursor;
@@ -47,6 +55,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	private Button searchBttn;
 	private EditText addressText;
 	private ViewGroup mainView;
+	private ListView listCover;
 
 	private Geocoder gc;
 
@@ -72,40 +81,58 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	String locality="";
 	
 	//private FrameLayout compassFrame;
-public float distance=0;
-public float initialDist=1;
-boolean initialDistSet=false;
-double bearing=0;
-double gpsAccuracy=0;
-float heading=0;
+	public float distance=0;
+	public float initialDist=1;
+	boolean initialDistSet=false;
+	double bearing=0;
+	double gpsAccuracy=0;
+	float heading=0;
+		
+
+
+	private NotesDbAdapter mDbHelper;
+	private Cursor mNotesCursor;
 	
-
-
-private dbAdapter db;
-
-public int mNoteNumber=0;
-
-public static final int INSERT_ID = Menu.FIRST;
+	public int mNoteNumber=0;
+	
+	private static final int ACTIVITY_CREATE=0;
+	private static final int ACTIVITY_EDIT=1;
+	
+	private static final int INSERT_ID = Menu.FIRST;
+	private static final int DELETE_ID = Menu.FIRST + 1;
 
     	/** Called when the activity is first created. */
 	    @Override
 	    public void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
-	        
-	        db = new dbAdapter(this);
-		        db.open();
+	      
+	        mDbHelper = new NotesDbAdapter(this);
+	        mDbHelper.open();
 	        fillData();
 
 	        //layout
-	          
 	        setContentView(R.layout.main);
 	        
-	        mainView = (AbsoluteLayout) findViewById(R.id.mainView);
-	        
+	        mainView = (AbsoluteLayout) findViewById(R.id.mainView);        
 	        info=(TextView)findViewById(R.id.infoView);
 	        searchBttn=(Button)findViewById(R.id.searchButton);
 	        addressText=(EditText) findViewById(R.id.address);
+	        //listCover=(ListView)findViewById(R.id.listCover);
+	        //listCover.setVisibility(listCover.VISIBLE);
+	       
+	        searchBttn.setOnClickListener(buttonListener);
+	        addressText.setOnClickListener(textBoxListener);
 
+//	        addressText.setOnKeyListener(new OnKeyListener() {
+//	            public boolean onKey(View v, int keyCode, KeyEvent event) {
+//	                if ((event.getAction() == KeyEvent.ACTION_DOWN)) {
+//
+//					listCover.setVisibility(listCover.INVISIBLE);
+//	                return true;
+//	                }
+//					return false;
+//				}
+//	        });
 	        
 	        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 	        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1l,1l, this);
@@ -117,59 +144,92 @@ public static final int INSERT_ID = Menu.FIRST;
 	        
 	        //geocoder
 			gc = new Geocoder(this); // create new geocoder instance
-	        searchBttn.setOnClickListener(buttonListener);
-	    
+	        
+	        registerForContextMenu(getListView());
 	    }
 	    
+	    //list
+	    private void fillData() {
+	        // Get all of the rows from the database and create the item list
+	        mNotesCursor = mDbHelper.fetchAllNotes();
+	        startManagingCursor(mNotesCursor);
+	        
+	        // Create an array to specify the fields we want to display in the list (only TITLE)
+	        String[] from = new String[]{NotesDbAdapter.KEY_TITLE};
+	        
+	        // and an array of the fields we want to bind those fields to (in this case just text1)
+	        int[] to = new int[]{R.id.text1};
+	        
+	        // Now create a simple cursor adapter and set it to display
+	        SimpleCursorAdapter notes = new SimpleCursorAdapter(this, R.layout.notes_row, mNotesCursor, from, to);
+	        setListAdapter(notes);
+	    }
 	    
-	    private SQLiteDatabase openDatabase(String mYDATABASENAME, Object object) {
-			// TODO Auto-generated method stub
-			return null;
-		}
+	    @Override
+	    public boolean onCreateOptionsMenu(Menu menu) {
+	        super.onCreateOptionsMenu(menu);
+	        //menu.add(0, INSERT_ID,0, "Insert");
+	        return true;
+	    }
+	    
+	    @Override
+	    public boolean onMenuItemSelected(int featureId, MenuItem item) {
+	        switch(item.getItemId()) {
+	        case INSERT_ID:
+	            createNote();
+	            return true;
+		    }        
+	        return super.onMenuItemSelected(featureId, item);
+	    }
 
-
-		private void createDatabase(String mYDATABASENAME, int i,
-				int modePrivate, Object object) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public boolean onCreateOptionsMenu(Menu menu) {
-		    boolean result = super.onCreateOptionsMenu(menu);
-		    menu.add(0, INSERT_ID, 0, "Add Item");
-		    return result;
+	    @Override
+		public void onCreateContextMenu(ContextMenu menu, View v,
+				ContextMenuInfo menuInfo) {
+			super.onCreateContextMenu(menu, v, menuInfo);
+	        menu.add(0, DELETE_ID, 0, "Delete");
 		}
 
 	    @Override
-	    public boolean onOptionsItemSelected(MenuItem item) {
-	        switch (item.getItemId()) {
-	        case INSERT_ID:
-	            //createNote();
-	            return true;
-	        }
-	       
-	        return super.onOptionsItemSelected(item);
+		public boolean onContextItemSelected(MenuItem item) {
+			switch(item.getItemId()) {
+	    	case DELETE_ID:
+	    		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		        mDbHelper.deleteNote(info.id);
+		        fillData();
+		        return true;
+			}
+			return super.onContextItemSelected(item);
+		}
+
+		private void createNote() {
+	    	Intent i = new Intent(this, NoteEdit.class);
+	    	startActivityForResult(i, ACTIVITY_CREATE);
 	    }
 	    
-	    private void createNote(String note) {
-	        db.createNote(note, "");
+	    @Override
+	    protected void onListItemClick(ListView l, View v, int position, long id) {
+	        super.onListItemClick(l, v, position, id);
+	        Cursor c = mNotesCursor;
+	        c.moveToPosition(position);
+	        
+//	        Intent i = new Intent(this, NoteEdit.class);
+//	        i.putExtra(NotesDbAdapter.KEY_ROWID, id);
+//	        startActivityForResult(i, ACTIVITY_EDIT);
+	        
+	        String searchString=c.getString( c.getColumnIndexOrThrow(NotesDbAdapter.KEY_TITLE));
+	        search(searchString,false);
+	                
+	    }
+
+
+	    @Override
+	    protected void onActivityResult(int requestCode, int resultCode,Intent intent) {
+	        super.onActivityResult(requestCode, resultCode, intent);
 	        fillData();
 	    }
 	    
+//end list
 	    
-	    private void fillData() {
-	        // Get all of the notes from the database and create the item list
-	        Cursor c = db.fetchAllNotes();
-	        startManagingCursor(c);
-
-	        String[] from = new String[] { dbAdapter.KEY_TITLE };
-	        int[] to = new int[] { R.id.text1 };
-	        
-	        // Now create an array adapter and set it to display using our row
-	        SimpleCursorAdapter notes =new SimpleCursorAdapter(this, R.layout.row, c, from, to);
-	        setListAdapter(notes);
-	    }
 	    
 	   
 
@@ -187,54 +247,75 @@ public static final int INSERT_ID = Menu.FIRST;
 	    	       return content;  
 	    	   }  
 	    
+	  
+	  void search(String searchInput, boolean save){
+
+			try {
+				List<Address> foundAdresses = gc.getFromLocationName(searchInput, 5); // Search addresses
+								
+				//String center=myLat+","+myLon;
+				//String url="http://ajax.googleapis.com/ajax/services/search/local?v=1.0&rsz=small&q="+searchInput+"&sll="+center+"";
+				//etInputStreamFromUrl(url);
+								
+				if (foundAdresses==null) { // if no address found,
+					// display an error
+				} else { // else display address on map
+					for (int i = 0; i < foundAdresses.size(); ++i) {
+						//dropdown list of found addresses
+						Address x = foundAdresses.get(i);
+						street=x.getAddressLine(0);
+						locality=x.getLocality();
+		                if(locality==null)locality="";
+
+						aLat = (float)x.getLatitude();
+						aLon = (float)x.getLongitude();		
+				        
+					}
+					initialDistSet=false;
+	                
+					bearing();
+	                updateInfo();
+	                	                	
+	                if(save==true){
+	                mDbHelper.createNote(searchInput, ""); 
+	                fillData();
+	            	}
+	                
+
+				}
+			} catch (Exception e) {
+				// @todo: Show error message
+				//getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
+			}
+      
+		  
+	  }
 	    private OnClickListener buttonListener = new OnClickListener() {
 	        public void onClick(View v) {
-	        	String addressInput = addressText.getText().toString(); // Get input text
-				try {
-					List<Address> foundAdresses = gc.getFromLocationName(addressInput, 5); // Search addresses
-					
-					//searchProvider.saveRecentQuery(addressInput,null);
-					
-					String center=myLat+","+myLon;
-					String url="http://ajax.googleapis.com/ajax/services/search/local?v=1.0&rsz=small&q="+addressInput+"&sll="+center+"";
-					//etInputStreamFromUrl(url);
-					
-					
-					
-					if (foundAdresses==null) { // if no address found,
-						// display an error
-					} else { // else display address on map
-						for (int i = 0; i < foundAdresses.size(); ++i) {
-							//dropdown list of found addresses
-							Address x = foundAdresses.get(i);
-							street=x.getAddressLine(0);
-							locality=x.getLocality();
-			                if(locality==null)locality="";
-
-							aLat = (float)x.getLatitude();
-							aLon = (float)x.getLongitude();
-							
-					        
-						}
-						initialDistSet=false;
-		                
-						bearing();
-		                updateInfo();
-		                
-		                
-		                db.createNote(street+", "+locality, "");
-		                fillData();
-		                
-						//navigateToLocation((lat * 1000000), (lon * 1000000),myMap); // display the found address
-					}
-				} catch (Exception e) {
-					// @todo: Show error message
-					//getWindow().setFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM,WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM);
-				 
-				}
+	        	
+	          	String addressInput = addressText.getText().toString(); // Get input text
+	          	search(addressInput,true);
+	  
+	        	
+	        	
 	        }
 	    };
 
+	    private OnClickListener textBoxListener = new OnClickListener() {
+	        public void onClick(View v) {
+	        	
+				//listCover.setVisibility(listCover.INVISIBLE);
+
+	        	
+	        	
+	        }
+	    };
+	    
+
+	
+
+
+	    
 
 	    void updateInfo(){
   	        info.setText("accuracy: "+gpsAccuracy+"\nlat: "+myLat+", lon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nheading: "+heading+"\nbearing: "+bearing+"\ndistance: "+distance+"/"+initialDist);
@@ -390,7 +471,7 @@ public static final int INSERT_ID = Menu.FIRST;
 	            //arrow
 
 				int ac=(int) (gpsAccuracy);
-				if(ac>200)ac=200;
+				if(ac>150)ac=150;
 				
 				
 				paint.setColor(Color.rgb(255-ac,255-ac,255-ac));
@@ -423,17 +504,27 @@ public static final int INSERT_ID = Menu.FIRST;
 	            int textX=-80;
 	            
 	            Typeface type=null;
-	            type.create("Helvetica", 1);
+	            Typeface.create("Helvetica", 1);
 	            
 	
+
+	            
 	            String distanceString;
+	            DecimalFormat df2 = new DecimalFormat("0.##");
+
 	            if(distance<1000){
-	            distanceString=Float.toString( distance)+" meters";
+		            double meters = new Double(df2.format(distance)).doubleValue();
+
+	            	distanceString=Double.toString( meters)+" meters";
 	            }
+
 	            else{
-		            distanceString=Float.toString( distance/1000) + " km";
- 	
+	            	double  kmDist=distance/1000;
+		            double km = new Double(df2.format(kmDist)).doubleValue();
+
+		            distanceString=Double.toString(km) + " km";
 	            }
+	            
 	            paint.setTextSize(30);
 	            paint.setTypeface(type);
 	            canvas.drawText(distanceString,textX,15,mPaint);
