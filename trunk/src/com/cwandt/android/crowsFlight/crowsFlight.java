@@ -13,6 +13,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.hardware.SensorListener;
@@ -27,11 +28,14 @@ import android.util.Log;
 import android.widget.AbsoluteLayout;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.view.ContextMenu;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -41,6 +45,7 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 
 import android.location.Address;
+import android.app.AlertDialog;
 import android.app.ListActivity;
 
 
@@ -159,7 +164,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    @Override
 	    public boolean onCreateOptionsMenu(Menu menu) {
 	        super.onCreateOptionsMenu(menu);
-	        menu.add(0, INSERT_ID,0, "Mark Here");
+	        menu.add(0, INSERT_ID,0, "Save Current Location");
 	        return true;
 	    }
 	    
@@ -254,8 +259,33 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	  
 	  
 	  void markHere(){
-          mDbHelper.createNote("here", aLatString, aLonString); 
-          fillData();
+		  final FrameLayout fl = new FrameLayout(this);
+		  final EditText input = new EditText(this);
+		  input.setGravity(Gravity.CENTER);
+
+		  fl.addView(input, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+
+		 		  
+		  input.setText("Here");
+		  new AlertDialog.Builder(this)
+		       .setView(fl)
+		       .setTitle("Enter a name for your current location.")
+		       .setPositiveButton("OK", new DialogInterface.OnClickListener(){
+		            public void onClick(DialogInterface d, int which) {
+		                 d.dismiss();
+		                 //Toast.makeText(context, text, duration)
+		                 //Toast.makeText(OuterActivity.this, "Value: " + input.getText().toString(), Toast.LENGTH_LONG).show();
+		                 mDbHelper.createNote(input.getText().toString(), myLatString, myLonString); 
+		                 fillData();
+		                 }
+		       })
+		       .setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+		            public void onClick(DialogInterface d, int which) {
+		                 d.dismiss();
+		            }
+		       }).create().show();
+		  
+
   
 	  }
 	  
