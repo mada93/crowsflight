@@ -1,6 +1,8 @@
 package com.example;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -10,6 +12,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 
 import android.app.Activity;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.SensorListener;
 import android.hardware.SensorManager;
 import android.location.Geocoder;
@@ -17,36 +21,28 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.provider.SearchRecentSuggestions;
-import android.text.Editable;
 import android.util.Config;
 import android.util.Log;
 import android.widget.AbsoluteLayout;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.graphics.*;
 import android.view.View.OnClickListener;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.location.Address;
+import android.app.ListActivity;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
 
-import com.example.searchProvider;
 
-
-
-public class crowsFlight extends Activity implements LocationListener {
-	//geocoder
-	private View compassBox;
-
+public class crowsFlight extends ListActivity implements LocationListener {
 	private TextView info;
 	private Button searchBttn;
 	private EditText addressText;
@@ -84,10 +80,24 @@ double gpsAccuracy=0;
 float heading=0;
 	
 
+
+private dbAdapter db;
+
+public int mNoteNumber=0;
+
+public static final int INSERT_ID = Menu.FIRST;
+
     	/** Called when the activity is first created. */
 	    @Override
 	    public void onCreate(Bundle savedInstanceState) {
 	        super.onCreate(savedInstanceState);
+	        
+	        db = new dbAdapter(this);
+		        db.open();
+	        fillData();
+
+	        //layout
+	          
 	        setContentView(R.layout.main);
 	        
 	        mainView = (AbsoluteLayout) findViewById(R.id.mainView);
@@ -112,34 +122,56 @@ float heading=0;
 	    }
 	    
 	    
-	    /* Creates the menu items */
-	    public boolean onCreateOptionsMenu(Menu menu) {
-	        menu.add(0, SEARCH, 0, "Search");
-	        return true;
-	    }
+	    private SQLiteDatabase openDatabase(String mYDATABASENAME, Object object) {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
-	    /* Handles item selections */
+
+		private void createDatabase(String mYDATABASENAME, int i,
+				int modePrivate, Object object) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public boolean onCreateOptionsMenu(Menu menu) {
+		    boolean result = super.onCreateOptionsMenu(menu);
+		    menu.add(0, INSERT_ID, 0, "Add Item");
+		    return result;
+		}
+
+	    @Override
 	    public boolean onOptionsItemSelected(MenuItem item) {
 	        switch (item.getItemId()) {
-	        case SEARCH:
-	            search();
+	        case INSERT_ID:
+	            //createNote();
 	            return true;
 	        }
-	        return false;
-	    }
-
-	    
-	    public void search(){
-	    	//addressText.draw(mView);
-	    	
+	       
+	        return super.onOptionsItemSelected(item);
 	    }
 	    
-	    public boolean onSearchRequested(){
-	    	
-	    	
-			return initialDistSet;
-
+	    private void createNote(String note) {
+	        db.createNote(note, "");
+	        fillData();
 	    }
+	    
+	    
+	    private void fillData() {
+	        // Get all of the notes from the database and create the item list
+	        Cursor c = db.fetchAllNotes();
+	        startManagingCursor(c);
+
+	        String[] from = new String[] { dbAdapter.KEY_TITLE };
+	        int[] to = new int[] { R.id.text1 };
+	        
+	        // Now create an array adapter and set it to display using our row
+	        SimpleCursorAdapter notes =new SimpleCursorAdapter(this, R.layout.row, c, from, to);
+	        setListAdapter(notes);
+	    }
+	    
+	   
 
 	  public static InputStream getInputStreamFromUrl(String url) {  
 	    	     InputStream content = null;  
@@ -176,15 +208,23 @@ float heading=0;
 							//dropdown list of found addresses
 							Address x = foundAdresses.get(i);
 							street=x.getAddressLine(0);
-						
+							locality=x.getLocality();
+			                if(locality==null)locality="";
+
 							aLat = (float)x.getLatitude();
 							aLon = (float)x.getLongitude();
+							
+					        
 						}
 						initialDistSet=false;
 		                
 						bearing();
 		                updateInfo();
-
+		                
+		                
+		                db.createNote(street+", "+locality, "");
+		                fillData();
+		                
 						//navigateToLocation((lat * 1000000), (lon * 1000000),myMap); // display the found address
 					}
 				} catch (Exception e) {
@@ -248,9 +288,9 @@ float heading=0;
 	        private Paint   mPaint = new Paint();
 	        private Path    mPath = new Path();
 	        private Path    distPath = new Path();
-            int compassRadius=-135;
+            int compassRadius=110;
             int triangleSize=30;
-            int distPathRadius=-100;
+            int distPathRadius=100;
 
             
 	        public CompassView(Context context) {
@@ -259,8 +299,9 @@ float heading=0;
 	            // Construct a wedge-shaped path
 
 	            mPath.moveTo(0, compassRadius);
-	            mPath.lineTo(triangleSize/2, compassRadius+triangleSize);  
-	            mPath.lineTo(-triangleSize/2, compassRadius+triangleSize);         
+	            mPath.lineTo(triangleSize/2, compassRadius);  
+	            mPath.lineTo(0, compassRadius+triangleSize);  
+	            mPath.lineTo(-triangleSize/2, compassRadius);         
 	            mPath.lineTo(0, compassRadius);         
 	            mPath.close();
 	            
@@ -277,7 +318,7 @@ float heading=0;
 	            
 	            Paint paint = mPaint;
 	            canvas.setViewport(250, 250);
-	            //canvas.drawColor(Color.BLACK);	
+	            //canvas.drawColor(Color.BLACK);
 	            paint.setAntiAlias(true);
 
 	            int w = canvas.getWidth();
@@ -289,7 +330,7 @@ float heading=0;
 
 	            //circle
 	            paint.setStrokeWidth(5);
-	            paint.setColor(Color.argb(50, 100, 100, 100));
+	            paint.setColor(Color.argb(100,120,120,120));
 	            paint.setStyle(Paint.Style.STROKE);
 	            canvas.drawCircle(0, 0, distPathRadius,mPaint);
 
@@ -297,14 +338,14 @@ float heading=0;
 	            //northarrow
 	            canvas.save();
 	            if (mValues != null) {            
-	                canvas.rotate(-heading);
+	                canvas.rotate(-heading+180);
 	            }
 	            paint.setColor(Color.argb(255, 150, 0, 0));
 	            paint.setStyle(Paint.Style.FILL);
 	            //canvas.drawPath(mPath, mPaint);
 	            paint.setStyle(Paint.Style.STROKE);
 	            paint.setStrokeWidth(3);
-	            canvas.drawLine(0, distPathRadius+20, 0, distPathRadius, mPaint);
+	            canvas.drawLine(0, distPathRadius-20, 0, distPathRadius, mPaint);
 	            canvas.restore();
 
 	            
@@ -312,32 +353,21 @@ float heading=0;
 	            //pointer
 	            canvas.save();
 	            if (mValues != null) {            
-	                canvas.rotate((float) (-heading+bearing));
+	                canvas.rotate((float) (-heading+bearing+180));
 	            }
 
-	            //arrow
-	            paint.setColor(Color.WHITE);
-	            paint.setStyle(Paint.Style.FILL);
-	            canvas.drawPath(mPath, mPaint);
+
 	            
-	            paint.setColor(Color.BLACK);
-	            paint.setStyle(Paint.Style.FILL);
-	            float ac=(float) (gpsAccuracy/50);
-	            if(ac>1)ac=1;
-	            canvas.save();
-
-	            canvas.translate(0, (float) (-50+(ac*40)));
-	            canvas.drawPath(mPath, mPaint);
-	            canvas.restore();
-
+	            
+	            
+	            
 	            
 	            //distance arc
 	            canvas.save();
-	            canvas.rotate(-90);
+	            canvas.rotate(90);
 	            paint.setStrokeWidth(4);
 	            paint.setStrokeCap(Paint.Cap.SQUARE);	            
 	            paint.setStyle(Paint.Style.STROKE);
-	            distPath.moveTo(distPathRadius,0);
 	            int radius=100;
 	            RectF rect=new RectF(-radius,-radius,radius,radius);
 
@@ -346,13 +376,41 @@ float heading=0;
 
 	            paint.setColor(Color.WHITE);
 	            float arc=distance/initialDist;
+	            if(distance==0)arc=1;
 	            if(arc>1)arc=1;
-	            
+	           
+//	            distPath.moveTo(distPathRadius+10,0);
+//	            canvas.drawLine( distPathRadius+10, 0, distPathRadius,0, mPaint);
+	            distPath.moveTo(distPathRadius,0);
 	            canvas.drawArc(rect,0,(float)(arc*355.0),false,mPaint);
 
-	            
 	            canvas.restore();
+
 	            
+	            //arrow
+
+				int ac=(int) (gpsAccuracy);
+				if(ac>200)ac=200;
+				
+				
+				paint.setColor(Color.rgb(255-ac,255-ac,255-ac));
+				paint.setStyle(Paint.Style.FILL);
+				
+				
+				canvas.save();
+				canvas.drawPath(mPath, mPaint);
+				
+				
+				//overlay Arrow
+				//canvas.translate(0, (float) (-45+(ac*40)));
+				//canvas.drawPath(mPath, mPaint);
+				
+				canvas.restore();
+
+
+
+
+
 	            //centerpoint
 	            paint.setStyle(Paint.Style.FILL);
 	            paint.setColor(Color.argb(50, 255, 0, 0));
@@ -367,11 +425,24 @@ float heading=0;
 	            Typeface type=null;
 	            type.create("Helvetica", 1);
 	            
+	
+	            String distanceString;
+	            if(distance<1000){
+	            distanceString=Float.toString( distance)+" meters";
+	            }
+	            else{
+		            distanceString=Float.toString( distance/1000) + " km";
+ 	
+	            }
 	            paint.setTextSize(30);
 	            paint.setTypeface(type);
-	            canvas.drawText(Integer.toString((int) distance)+" meters",textX,15,mPaint);
-	            paint.setTextSize(15);
+	            canvas.drawText(distanceString,textX,15,mPaint);
+	           
+	            paint.setTextSize(20);
 	            canvas.drawText(street,textX,35,mPaint);
+	            
+	            paint.setTextSize(15);
+	            canvas.drawText(locality,textX,45,mPaint);
 
 	            //if (lat!=null) canvas.drawText("lat: "+lat,textX,10,mPaint);
 	            //if (lon!=null) canvas.drawText("lon: "+lon,textX,20,mPaint);
@@ -447,7 +518,7 @@ float heading=0;
  	        mSensorManager.unregisterListener(mListener);
  	        lm.removeUpdates(this);
 
-super.onStop();
+ 	        super.onStop();
  	    }
  	    
 
