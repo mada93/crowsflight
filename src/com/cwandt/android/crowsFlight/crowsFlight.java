@@ -91,7 +91,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	public float initialDist=1;
 	boolean initialDistSet=false;
 	double bearing=0;
-	double gpsAccuracy=150;
+	double gpsAccuracy=0;
 	float heading=0;
 		
 
@@ -299,33 +299,16 @@ public class crowsFlight extends ListActivity implements LocationListener {
 
 		  final	WebView webview  = new WebView(this);
 		  webview.getSettings().setJavaScriptEnabled(true);
-		  
-		  
 
-          /* Show a progress-bar */
-         myProgressDialog = ProgressDialog.show(crowsFlight.this,"Please wait...", "Loading page...", true);
-         new Thread() {
-               public void run() {
-                    
-                    try {
-              		  webview.loadUrl("http://cwandt.com/donations/index.html");
-            	            
-                         
-                    } catch (NumberFormatException nfe) {
-                         // Crap was typed Wink
-                    } catch (Exception e) {
-                         Log.e("Search", e.toString(), e);
-                    }
-                    myProgressDialog.dismiss();
-               }
-          }.start();
+          webview.loadUrl("http://cwandt.com/donations/index.html");
+
           
 		  
 		  fl.addView(webview, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
 		  new AlertDialog.Builder(this)
 		       .setView(fl)
-		       .setTitle("Donations are welcome.")
+		       .setTitle("This app is totally free, but donations are welcome!")
 		       
 		       .setNegativeButton("Done", new DialogInterface.OnClickListener(){
 		            public void onClick(DialogInterface d, int which) {
@@ -473,7 +456,10 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    
 
 	    void updateInfo(){
-  	        info.setText("accuracy: "+gpsAccuracy+"meters \nmylat: "+myLat+", myLon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nheading: "+heading+"\nbearing: "+bearing+"\ndistance: "+distance+" / "+initialDist);	
+	    	String accuracy="no satellites in view";
+			if(gpsAccuracy>0)accuracy=Double.toString(gpsAccuracy)+" meters ";
+
+  	        info.setText("accuracy: "+accuracy+"\nmylat: "+myLat+", myLon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nheading: "+heading+"\nbearing: "+bearing+"\ndistance: "+distance+" / "+initialDist);	
 	    }
 	    
         public void onLocationChanged(Location arg0) {
@@ -624,7 +610,8 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	            //arrow
 
 				int ac=(int) (gpsAccuracy);
-				if(ac>150)ac=150;
+				if(ac>180 || ac==0)ac=180;
+				
 				
 				
 				paint.setColor(Color.rgb(255-ac,255-ac,255-ac));

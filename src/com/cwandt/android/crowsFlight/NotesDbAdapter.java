@@ -137,7 +137,6 @@ public class NotesDbAdapter {
      * @return true if deleted, false otherwise
      */
     public boolean deleteNote(long rowId) {
-
         return mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
     }
 
@@ -147,7 +146,6 @@ public class NotesDbAdapter {
      * @return Cursor over all notes
      */
     public Cursor fetchAllNotes() {
-
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_TITLE, KEY_LAT, KEY_LON }, null, null, null, null, KEY_ROWID + " DESC");
     }
 
