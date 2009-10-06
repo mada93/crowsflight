@@ -1,7 +1,4 @@
-package com.cwandt.android.crowsFlight;
-
-
-
+package com.cwandt.android.crowsFlight.donate;
 
 import java.io.InputStream;
 import java.text.DecimalFormat;
@@ -25,12 +22,10 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.text.Spannable;
 import android.text.util.Linkify;
 import android.util.Config;
 import android.util.Log;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.AbsoluteLayout;
 import android.widget.Button;
 import android.widget.EditText;
@@ -38,11 +33,9 @@ import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.view.ContextMenu;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -57,13 +50,12 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 
 
+@SuppressWarnings("deprecation")
 public class crowsFlight extends ListActivity implements LocationListener {
 	private TextView info;
 	private Button searchBttn;
 	private EditText addressText;
 	private ViewGroup mainView;
-	private ListView listCover;
-
 	private Geocoder gc;
 
 	boolean mAnimate=true;
@@ -101,7 +93,6 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	
 	public int mNoteNumber=0;
 	
-	private static final int ACTIVITY_CREATE=0;
 	private static final int INSERT_ID = Menu.FIRST;
 	private static final int DELETE_ID = Menu.FIRST + 1;
 	private static final int DONATE_ID = Menu.FIRST + 2;
@@ -132,16 +123,6 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	        searchBttn.setOnClickListener(buttonListener);
 	        addressText.setOnClickListener(textBoxListener);
 
-//	        addressText.setOnKeyListener(new OnKeyListener() {
-//	            public boolean onKey(View v, int keyCode, KeyEvent event) {
-//	                if ((event.getAction() == KeyEvent.ACTION_DOWN)) {
-//
-//					listCover.setVisibility(listCover.INVISIBLE);
-//	                return true;
-//	                }
-//					return false;
-//				}
-//	        });
 	        
 	        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 	        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1l,1l, this);
@@ -178,7 +159,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    public boolean onCreateOptionsMenu(Menu menu) {
 	        super.onCreateOptionsMenu(menu);
 	        menu.add(0, INSERT_ID,0, "Save Current Location");
-	        menu.add(0, DONATE_ID,0, "Donate");
+	        menu.add(0, DONATE_ID,0, "About");
 
 	        return true;
 	    }
@@ -189,22 +170,8 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	        case INSERT_ID:
 	            markHere();
 	            return true;
-	            
-	            
 	        case DONATE_ID:
-	        	
-//	        	mView.setVisibility(mView.INVISIBLE);
-//	        	
-//	        	WebView webview;
-//	            webview = (WebView) findViewById(R.id.webview);
-//		        webview.getSettings().setJavaScriptEnabled(true);
-//
-//	            //https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8675557
-//		        webview.loadUrl("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=8675557");
-//		        webview.setVisibility(webview.VISIBLE);
-	        	
 		        donate();
-		        
 		        return true;
   	
 		    }        
@@ -234,12 +201,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 			return super.onContextItemSelected(item);
 		}
 
-		private void createNote() {
-	    	Intent i = new Intent(this, NoteEdit.class);
-	    	startActivityForResult(i, ACTIVITY_CREATE);
-	    }
-	    
-	    @Override
+		@Override
 	    protected void onListItemClick(ListView l, View v, int position, long id) {
 	        super.onListItemClick(l, v, position, id);
 	        Cursor c = mNotesCursor;
@@ -297,18 +259,26 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	  void donate(){
 		  final FrameLayout fl = new FrameLayout(this);
 
-		  final	WebView webview  = new WebView(this);
-		  webview.getSettings().setJavaScriptEnabled(true);
-
-          webview.loadUrl("http://cwandt.com/donations/index.html");
+//		  final	WebView webview  = new WebView(this);
+//		  webview.getSettings().setJavaScriptEnabled(true);
+//		  webview.loadUrl("http://cwandt.com/donations/index.html");
+		  final	TextView textView  = new TextView(this);
 
           
+		  textView.setText("Enter an address in the top text box and hit 'go'.\n" +
+		  		"To save your current location, press the menu button and press 'save current location'.\n" +
+		  		"Make crowsFlight point to any saved location at any time by selecting it from your list.\n" +
+		  		"To delete list items, long-click on the item. \n\n" +
+		  		"If you like this app and you use it, please help the development of crowsFlight by downloading the paid version in the Android Market.\n" +
+		  		"Thank you! Crow's Flight is designed by cw&t. http://cwandt.com");
+		  Linkify.addLinks(textView, Linkify.ALL);
 		  
-		  fl.addView(webview, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+		  //fl.addView(webview, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
+		  fl.addView(textView, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.FILL_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
 
 		  new AlertDialog.Builder(this)
 		       .setView(fl)
-		       .setTitle("This app is totally free, but donations are welcome!")
+		       .setTitle("This app is free, but donations are welcome!")
 		       
 		       .setNegativeButton("Done", new DialogInterface.OnClickListener(){
 		            public void onClick(DialogInterface d, int which) {
@@ -542,7 +512,6 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	            paint.setAntiAlias(true);
 
 	            int w = canvas.getWidth();
-	            int h = canvas.getHeight();
 	            int cx = w / 2;
 	            int cy = 200;
 
