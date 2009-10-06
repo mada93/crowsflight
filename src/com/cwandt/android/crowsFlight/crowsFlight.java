@@ -25,7 +25,6 @@ import android.os.Message;
 import android.text.util.Linkify;
 import android.util.Config;
 import android.util.Log;
-import android.webkit.WebView;
 import android.widget.AbsoluteLayout;
 import android.widget.Button;
 import android.widget.EditText;
