@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.cwandt.android.crowsFlight;
+package com.cwandt.android.crowsFlight.donate;
 
 import android.content.ContentValues;
 import android.content.Context;
