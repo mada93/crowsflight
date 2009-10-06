@@ -336,8 +336,9 @@ public class crowsFlight extends ListActivity implements LocationListener {
 				
 
 				if (foundAdresses==null) { // if no address found,
-					// display an error
-				} else { // else display address on map
+
+					
+					  } else { // else display address on map
 					for (int i = 0; i < foundAdresses.size(); ++i) {
 						//dropdown list of found addresses
 						Address x = foundAdresses.get(i);
@@ -354,11 +355,15 @@ public class crowsFlight extends ListActivity implements LocationListener {
 						aLonString=Float.toString((float) aLon);
 
 					}
+					
+					
+
+					  
 					initialDistSet=false;
 	                
 					bearing();
 	                updateInfo();
-	                	                	
+	                
 	                mDbHelper.createNote(searchInput, aLatString, aLonString); 
 	                fillData();
 				}
