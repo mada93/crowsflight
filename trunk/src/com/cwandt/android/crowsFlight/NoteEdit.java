@@ -1,6 +1,6 @@
 
 
-package com.cwandt.android.crowsFlight.donate;
+package com.cwandt.android.crowsFlight;
 
 
 import android.app.Activity;

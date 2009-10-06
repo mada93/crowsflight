@@ -1,4 +1,4 @@
-package com.cwandt.android.crowsFlight.donate;
+package com.cwandt.android.crowsFlight;
 
 import java.io.InputStream;
 import java.text.DecimalFormat;
