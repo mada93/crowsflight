@@ -37,7 +37,9 @@ xmlns:android="http://schemas.android.com/apk/res/android"
 	android:text="Info" 
 	android:padding="3px"
 	/>
-		
+	
+
+			
     <ListView android:id="@+id/android:list"
     android:layout_width="fill_parent" 
     android:layout_height="305px"
@@ -53,6 +55,17 @@ xmlns:android="http://schemas.android.com/apk/res/android"
     android:text=""
     />
     
+    <TextView 
+	android:id="@+id/distView" 
+	android:textSize="30px"
+	android:clickable="true" 
+	android:layout_width="fill_parent"
+	android:layout_height="60px" 
+	android:layout_y="180px"
+	android:layout_x="80px" 	 
+	android:text="Distance" 
+	/>
+	
      	
 </AbsoluteLayout>
 

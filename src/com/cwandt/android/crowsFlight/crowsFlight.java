@@ -54,6 +54,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	private TextView info;
 	private Button searchBttn;
 	private EditText addressText;
+	private TextView distView;
 	private ViewGroup mainView;
 	private Geocoder gc;
 
@@ -84,8 +85,9 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	double bearing=0;
 	double gpsAccuracy=0;
 	float heading=0;
-		
-
+	String accuracy="";
+	
+	boolean metricBool=true;
 
 	private NotesDbAdapter mDbHelper;
 	private Cursor mNotesCursor;
@@ -115,12 +117,17 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	        info=(TextView)findViewById(R.id.infoView);
 	        searchBttn=(Button)findViewById(R.id.searchButton);
 	        addressText=(EditText) findViewById(R.id.address);
+	        distView = (TextView) findViewById(R.id.distView);        
+
+	        
+	        
 	        //listCover=(ListView)findViewById(R.id.listCover);
 	        //listCover.setVisibility(listCover.VISIBLE);
 	 
 
 	        searchBttn.setOnClickListener(buttonListener);
 	        addressText.setOnClickListener(textBoxListener);
+	        distView.setOnClickListener(distListener);
 
 	        
 	        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -268,7 +275,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 		  		"To save your current location, press the menu button and press 'save current location'.\n" +
 		  		"Make crowsFlight point to any saved location at any time by selecting it from your list.\n" +
 		  		"To delete list items, long-click on the item. \n\n" +
-		  		"If you like this app and you use it, please help the development of crowsFlight by downloading the paid version in the Android Market.\n" +
+		  		"If you like this app and you use it, please help the development of crowsFlight by downloading the paid version in the Android Market. -> market://search?q=pname:com.cwandt.android.crowsFlight.donate\n" +
 		  		"Thank you! Crow's Flight is designed by cw&t. http://cwandt.com");
 		  Linkify.addLinks(textView, Linkify.ALL);
 		  
@@ -377,6 +384,15 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	  
 	  
 	  
+	    private OnClickListener distListener = new OnClickListener() {
+	        public void onClick(View v) {
+	        	if(metricBool==true)metricBool=false;
+	        	else if(metricBool==false)metricBool=true;
+
+	        }
+	    };
+	    
+	    
 	    private OnClickListener buttonListener = new OnClickListener() {
 	        public void onClick(View v) {
 	        	
@@ -430,11 +446,12 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	    
 
 	    void updateInfo(){
-	    	String accuracy="no satellites in view";
+	    	accuracy="no satellites in view";
 			if(gpsAccuracy>0)accuracy=Double.toString(gpsAccuracy)+" meters ";
 
   	        info.setText("accuracy: "+accuracy+"\nmylat: "+myLat+", myLon:"+myLon+"\nalat: "+aLat+", alon: "+aLon+"\nheading: "+heading+"\nbearing: "+bearing+"\ndistance: "+distance+" / "+initialDist);	
 	    }
+	    
 	    
         public void onLocationChanged(Location arg0) {
                 myLatString = String.valueOf(arg0.getLatitude());
@@ -533,7 +550,7 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	            if (mValues != null) {            
 	                canvas.rotate(-heading+180);
 	            }
-	            paint.setColor(Color.argb(255, 150, 0, 0));
+	            paint.setColor(Color.argb(255, 200, 0, 0));
 	            paint.setStyle(Paint.Style.FILL);
 	            //canvas.drawPath(mPath, mPaint);
 	            paint.setStyle(Paint.Style.STROKE);
@@ -544,64 +561,60 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	            
 	            
 	            //pointer
-	            canvas.save();
-	            if (mValues != null) {            
-	                canvas.rotate((float) (-heading+bearing+180));
-	            }
+		            canvas.save();
+		           
+		            if (mValues != null) {            
+		                canvas.rotate((float) (-heading+bearing+180));
+		            } 
+		            
+		            //distance arc
+		            canvas.save();
+		            canvas.rotate(90);
+		            paint.setStrokeWidth(4);
+		            paint.setStrokeCap(Paint.Cap.SQUARE);	            
+		            paint.setStyle(Paint.Style.STROKE);
+		            int radius=100;
+		            RectF rect=new RectF(-radius,-radius,radius,radius);
+	
+		            paint.setColor(Color.rgb(20, 20, 20));
+		            canvas.drawArc(rect,0,360,false,mPaint);
+	
+		            paint.setColor(Color.WHITE);
+		            float arc=distance/initialDist;
+		            if(distance==0)arc=1;
+		            if(arc>1)arc=1;
+		           
+	//	            distPath.moveTo(distPathRadius+10,0);
+	//	            canvas.drawLine( distPathRadius+10, 0, distPathRadius,0, mPaint);
+		            distPath.moveTo(distPathRadius,0);
+		           
+		            if(gpsAccuracy>0 && aLat>0)canvas.drawArc(rect,0,(float)(arc*355.0),false,mPaint);
+	
+		            canvas.restore();
+		            
+		            
+		            //arrow
+	
+					int ac=(int) (gpsAccuracy);
+					if(ac>180 || ac==0)ac=180;
+					
+					
+					
+					paint.setColor(Color.rgb(255-ac,255-ac,255-ac));
+					paint.setStyle(Paint.Style.FILL);
+					
+					
+					canvas.save();
+					if(gpsAccuracy>0 && aLat>0)canvas.drawPath(mPath, mPaint);
+					
+					
+					//overlay Arrow
+					//canvas.translate(0, (float) (-45+(ac*40)));
+					//canvas.drawPath(mPath, mPaint);
+					
+					canvas.restore();
 
-
-	            
-	            
-	            
-	            
-	            
-	            //distance arc
-	            canvas.save();
-	            canvas.rotate(90);
-	            paint.setStrokeWidth(4);
-	            paint.setStrokeCap(Paint.Cap.SQUARE);	            
-	            paint.setStyle(Paint.Style.STROKE);
-	            int radius=100;
-	            RectF rect=new RectF(-radius,-radius,radius,radius);
-
-	            paint.setColor(Color.rgb(20, 20, 20));
-	            canvas.drawArc(rect,0,360,false,mPaint);
-
-	            paint.setColor(Color.WHITE);
-	            float arc=distance/initialDist;
-	            if(distance==0)arc=1;
-	            if(arc>1)arc=1;
 	           
-//	            distPath.moveTo(distPathRadius+10,0);
-//	            canvas.drawLine( distPathRadius+10, 0, distPathRadius,0, mPaint);
-	            distPath.moveTo(distPathRadius,0);
-	            canvas.drawArc(rect,0,(float)(arc*355.0),false,mPaint);
-
-	            canvas.restore();
-
-	            
-	            //arrow
-
-				int ac=(int) (gpsAccuracy);
-				if(ac>180 || ac==0)ac=180;
-				
-				
-				
-				paint.setColor(Color.rgb(255-ac,255-ac,255-ac));
-				paint.setStyle(Paint.Style.FILL);
-				
-				
-				canvas.save();
-				canvas.drawPath(mPath, mPaint);
-				
-				
-				//overlay Arrow
-				//canvas.translate(0, (float) (-45+(ac*40)));
-				//canvas.drawPath(mPath, mPaint);
-				
-				canvas.restore();
-
-
 
 
 
@@ -625,23 +638,43 @@ public class crowsFlight extends ListActivity implements LocationListener {
 	            String distanceString;
 	            DecimalFormat df2 = new DecimalFormat("0.##");
 
-	            if(distance<1000){
-		            double meters = new Double(df2.format(distance)).doubleValue();
-
-	            	distanceString=Double.toString( meters)+" meters";
+	            if( metricBool==false){
+		            if(distance<1000){
+			            double meters = new Double(df2.format(distance)).doubleValue();
+		            	distanceString=Double.toString( meters)+" meters";
+		            }
+	
+		            else{
+		            	double  kmDist=distance/1000;
+			            double km = new Double(df2.format(kmDist)).doubleValue();
+	
+			            distanceString=Double.toString(km) + " km";
+		            }
 	            }
-
 	            else{
-	            	double  kmDist=distance/1000;
-		            double km = new Double(df2.format(kmDist)).doubleValue();
-
-		            distanceString=Double.toString(km) + " km";
+		            if(distance<1609.344){
+			            double ft = new Double(df2.format(distance)).doubleValue()/0.3048;
+	
+		            	distanceString=Double.toString(ft)+" ft";
+		            }
+	
+		            else{
+		            	double  miles=distance/1609.344;
+			            double m = new Double(df2.format(miles)).doubleValue();
+	
+			            distanceString=Double.toString(m) + " miles";
+		            }
 	            }
 	            
-	            paint.setTextSize(30);
-	            paint.setTypeface(type);
-	            canvas.drawText(distanceString,textX,15,mPaint);
-	           
+	            
+	            
+	            
+	            if(gpsAccuracy==0){
+		            distanceString="no satellites";
+	            }
+	            
+	  	        distView.setText(distanceString);	
+
 	            paint.setTextSize(15);
 	            canvas.drawText(street,textX,35,mPaint);
 	            
