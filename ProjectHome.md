@@ -1,0 +1,1 @@
+Crow’s Flight is a simple app for the Android platform. Enter an address and the GPS compass will continuously update your position and point towards the destination. Distance to the point is displayed in meters or kilometers along with a visual distance gauge.
